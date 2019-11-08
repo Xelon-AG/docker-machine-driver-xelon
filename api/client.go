@@ -95,7 +95,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	req = req.WithContext(ctx)
 
 	if req.Header.Get("Authorization") == "" {
-		apiToken, err := c.GetAuthorizationToken()
+		apiToken, err := c.GetAuthorizationToken(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +152,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 }
 
 // GetAuthorizationToken attempts to authenticate the user and returns the api token.
-func (c *Client) GetAuthorizationToken() (string, error) {
+func (c *Client) GetAuthorizationToken(ctx context.Context) (string, error) {
 	loginPath := fmt.Sprintf("login?email=%v&password=%v", c.Username, c.Password)
 	u, err := c.BaseURL.Parse(loginPath)
 	if err != nil {
@@ -169,6 +169,11 @@ func (c *Client) GetAuthorizationToken() (string, error) {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		default:
+		}
 		return "", err
 	}
 	defer func() {
