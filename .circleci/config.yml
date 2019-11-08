@@ -3,8 +3,6 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.13.4
-    environment:
-      GO111MODULE: on
 
     working_directory: /go/src/{{REPO_NAME}}
     steps:
