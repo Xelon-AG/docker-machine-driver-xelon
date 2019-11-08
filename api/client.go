@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const (
@@ -27,8 +28,6 @@ type Client struct {
 	Password  string   // Password for Xelon API.
 
 	common service // Reuse a single struct instead of allocating one for each service on the heap.
-
-	Login *LoginService
 }
 
 type service struct {
@@ -37,8 +36,9 @@ type service struct {
 
 // NewClient returns a new Xelon API client. To use API methods provide username (your email) and password.
 func NewClient(username, password string) *Client {
-	httpClient := http.DefaultClient
-
+	httpClient := &http.Client{
+		Timeout: time.Second * 15,
+	}
 	c := &Client{
 		client:    httpClient,
 		UserAgent: defaultUserAgent,
@@ -47,8 +47,6 @@ func NewClient(username, password string) *Client {
 	}
 	c.SetBaseURL(defaultBaseURL)
 	c.common.client = c
-
-	c.Login = (*LoginService)(&c.common)
 
 	return c
 }
@@ -95,6 +93,14 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 // the value pointed to by v, or returned as an error if an API error has occurred.
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
 	req = req.WithContext(ctx)
+
+	if req.Header.Get("Authorization") == "" {
+		apiToken, err := c.GetAuthorizationToken()
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
+	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -143,6 +149,44 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	}
 
 	return resp, err
+}
+
+// GetAuthorizationToken attempts to authenticate the user and returns the api token.
+func (c *Client) GetAuthorizationToken() (string, error) {
+	loginPath := fmt.Sprintf("login?email=%v&password=%v", c.Username, c.Password)
+	u, err := c.BaseURL.Parse(loginPath)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, u.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", c.UserAgent)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	err = CheckResponse(resp)
+	if err != nil {
+		return "", err
+	}
+
+	userRoot := new(userRoot)
+	err = json.NewDecoder(resp.Body).Decode(userRoot)
+	if err != nil {
+		return "", err
+	}
+
+	return userRoot.User.APIToken, nil
 }
 
 // CheckResponse checks the API response for errors, and returns them if present. A response is considered
