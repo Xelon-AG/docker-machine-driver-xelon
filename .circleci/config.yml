@@ -10,19 +10,19 @@ jobs:
 
       - restore_cache:
           keys:
-            - v1-pkg-cache
+            - go-mod-{{ checksum "go.sum" }}
 
       - run:
-          name: Check formatting with go fmt
+          name: Check code formatting with go fmt
           command: |
             make fmt
 
       - run:
-          name: Run all tests
+          name: Run unit tests
           command: |
             make clean test
 
       - save_cache:
-          key: v1-pkg-cache
+          key: go-mod-{{ checksum "go.sum" }}
           paths:
-            - "/go/pkg"
+            - "/go/pkg/mod"
