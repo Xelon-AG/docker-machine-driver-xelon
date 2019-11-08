@@ -1,0 +1,30 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.13.4
+    environment:
+      GO111MODULE: on
+
+    working_directory: /go/src/{{REPO_NAME}}
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-pkg-cache
+
+      - run:
+          name: Check formatting with go fmt
+          command: |
+            make fmt
+
+      - run:
+          name: Run all tests
+          command: |
+            make clean test
+
+      - save_cache:
+          key: v1-pkg-cache
+          paths:
+            - "/go/pkg"
