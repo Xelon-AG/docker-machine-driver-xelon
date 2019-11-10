@@ -28,6 +28,8 @@ type Client struct {
 	Password  string   // Password for Xelon API.
 
 	common service // Reuse a single struct instead of allocating one for each service on the heap.
+
+	Devices *DevicesService
 }
 
 type service struct {
@@ -47,6 +49,8 @@ func NewClient(username, password string) *Client {
 	}
 	c.SetBaseURL(defaultBaseURL)
 	c.common.client = c
+
+	c.Devices = (*DevicesService)(&c.common)
 
 	return c
 }

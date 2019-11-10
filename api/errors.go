@@ -1,8 +1,13 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+)
+
+var (
+	ErrEmptyArgument = errors.New("(api) argument cannot be empty")
 )
 
 type ErrorResponse struct {
