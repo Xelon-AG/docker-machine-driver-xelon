@@ -7,6 +7,7 @@ require (
 	github.com/Sirupsen/logrus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/machine v0.16.2
+	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20191107222254-f4817d981bb6 // indirect
 )
 

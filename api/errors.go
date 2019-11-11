@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	ErrEmptyArgument = errors.New("(api) argument cannot be empty")
+	ErrEmptyArgument      = errors.New("(api) argument cannot be empty")
+	ErrEmptyConfiguration = errors.New("(api) configuration cannot be empty")
+	ErrInvalidArgument    = errors.New("(api) argument is invalid")
 )
 
 type ErrorResponse struct {
