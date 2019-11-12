@@ -53,12 +53,12 @@ type deviceRoot struct {
 }
 
 // Get provides detailed information for a device identified by tenant and localvmid.
-func (s *DevicesService) Get(tenant, localVMID string) (*Device, *http.Response, error) {
-	if tenant == "" || localVMID == "" {
+func (s *DevicesService) Get(tenantID, localVMID string) (*Device, *http.Response, error) {
+	if tenantID == "" || localVMID == "" {
 		return nil, nil, ErrEmptyArgument
 	}
 
-	path := fmt.Sprintf("device?tenant=%v&localvmid=%v", tenant, localVMID)
+	path := fmt.Sprintf("device?tenant=%v&localvmid=%v", tenantID, localVMID)
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
@@ -96,4 +96,20 @@ func (s *DevicesService) Create(config *DeviceCreateConfiguration) (*DeviceCreat
 	}
 
 	return deviceCreateResponse, resp, nil
+}
+
+// Delete removes a server.
+func (s *DevicesService) Delete(localVMID string) (*http.Response, error) {
+	if localVMID == "" {
+		return nil, ErrEmptyArgument
+	}
+
+	path := fmt.Sprintf("%v/%v?password=%v", deviceBasePath, localVMID, s.client.Password)
+
+	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.Do(context.Background(), req, nil)
 }
