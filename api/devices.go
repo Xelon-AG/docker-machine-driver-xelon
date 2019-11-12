@@ -113,3 +113,35 @@ func (s *DevicesService) Delete(localVMID string) (*http.Response, error) {
 
 	return s.client.Do(context.Background(), req, nil)
 }
+
+// Start starts a server with specific localvmid.
+func (s *DevicesService) Start(localVMID string) (*http.Response, error) {
+	if localVMID == "" {
+		return nil, ErrEmptyArgument
+	}
+
+	path := fmt.Sprintf("%v/%v/startserver", deviceBasePath, localVMID)
+
+	req, err := s.client.NewRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.Do(context.Background(), req, nil)
+}
+
+// Start stops a server with specific localvmid.
+func (s *DevicesService) Stop(localVMID string) (*http.Response, error) {
+	if localVMID == "" {
+		return nil, ErrEmptyArgument
+	}
+
+	path := fmt.Sprintf("%v/%v/stopserver", deviceBasePath, localVMID)
+
+	req, err := s.client.NewRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.Do(context.Background(), req, nil)
+}
