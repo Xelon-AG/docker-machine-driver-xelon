@@ -13,9 +13,17 @@ type DevicesService service
 
 // Device represents a Xelon device.
 type Device struct {
-	CPU        int  `json:"cpu"`
-	Powerstate bool `json:"powerstate"`
-	RAM        int  `json:"ram"`
+	CPU            int            `json:"cpu"`
+	LocalVMDetails LocalVMDetails `json:"localvmdetails,omitempty"`
+	Networks       []Network      `json:"networks,omitempty"`
+	Powerstate     bool           `json:"powerstate"`
+	RAM            int            `json:"ram"`
+}
+
+type Network struct {
+	IPAddress  string `json:"ip,omitempty"`
+	Label      string `json:"label,omitempty"`
+	MacAddress string `json:"macAddress,omitempty"`
 }
 
 type DeviceCreateConfiguration struct {
@@ -31,21 +39,22 @@ type DeviceCreateConfiguration struct {
 }
 
 type DeviceCreateResponse struct {
-	Device DeviceShortInfo `json:"device,omitempty"`
-	IPs    []string        `json:"ips,omitempty"`
+	Device LocalVMDetails `json:"device,omitempty"`
+	IPs    []string       `json:"ips,omitempty"`
 }
 
-type DeviceShortInfo struct {
-	CreatedAt     string `json:"created_at"`
-	HVSystemID    int    `json:"hv_system_id"`
-	ISOMounted    string `json:"iso_mounted,omitempty"`
-	LocalVMID     string `json:"localvmid"`
-	State         int    `json:"state"`
-	TemplateID    int    `json:"template_id"`
-	UpdatedAt     string `json:"updated_at"`
-	UserID        int    `json:"user_id"`
-	VMDisplayName string `json:"vmdisplayname"`
-	VMHostname    string `json:"vmhostname"`
+type LocalVMDetails struct {
+	CreatedAt     string   `json:"created_at"`
+	HVSystemID    int      `json:"hv_system_id"`
+	ISOMounted    string   `json:"iso_mounted,omitempty"`
+	LocalVMID     string   `json:"localvmid"`
+	SSHKeys       []SSHKey `json:"ssh_keys,omitempty"`
+	State         int      `json:"state"`
+	TemplateID    int      `json:"template_id"`
+	UpdatedAt     string   `json:"updated_at"`
+	UserID        int      `json:"user_id"`
+	VMDisplayName string   `json:"vmdisplayname"`
+	VMHostname    string   `json:"vmhostname"`
 }
 
 type deviceRoot struct {

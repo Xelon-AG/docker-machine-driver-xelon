@@ -11,6 +11,17 @@ const sshBasePath = "ssh"
 // SSHsService handles communication with the ssh related methods of the Xelon API.
 type SSHsService service
 
+type SSHKey struct {
+	CreatedAt string `json:"created_at,omitempty"`
+	DeleteAt  string `json:"deleted_at,omitempty"`
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	PublicKey string `json:"ssh_key"`
+	UpdatedAt string `json:"updated_at,omitempty"`
+	UserID    int    `json:"user_id,omitempty"`
+	VMID      int    `json:"vm_id,omitempty"`
+}
+
 type SSHCreateConfiguration struct {
 	Name      string
 	PublicKey string
