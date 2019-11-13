@@ -17,7 +17,7 @@ type ErrorResponse struct {
 }
 
 type ErrorElement struct {
-	Error string `json:"error"`
+	Error string `json:"error,omitempty"`
 	Code  int    `json:"code,omitempty"`
 }
 

@@ -103,9 +103,9 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	req = req.WithContext(ctx)
 
 	if req.Header.Get("Authorization") == "" {
-		apiToken, err := c.GetAuthorizationToken(ctx)
+		apiToken, apiTokenResponse, err := c.getAuthorizationToken(ctx)
 		if err != nil {
-			return nil, err
+			return apiTokenResponse, err
 		}
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
 	}
@@ -159,17 +159,17 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	return resp, err
 }
 
-// GetAuthorizationToken attempts to authenticate the user and returns the api token.
-func (c *Client) GetAuthorizationToken(ctx context.Context) (string, error) {
+// getAuthorizationToken attempts to authenticate the user and returns the api token.
+func (c *Client) getAuthorizationToken(ctx context.Context) (string, *http.Response, error) {
 	loginPath := fmt.Sprintf("login?email=%v&password=%v", c.Username, c.Password)
 	u, err := c.BaseURL.Parse(loginPath)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -179,10 +179,10 @@ func (c *Client) GetAuthorizationToken(ctx context.Context) (string, error) {
 	if err != nil {
 		select {
 		case <-ctx.Done():
-			return "", ctx.Err()
+			return "", resp, ctx.Err()
 		default:
 		}
-		return "", err
+		return "", resp, err
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -190,16 +190,16 @@ func (c *Client) GetAuthorizationToken(ctx context.Context) (string, error) {
 
 	err = CheckResponse(resp)
 	if err != nil {
-		return "", err
+		return "", resp, err
 	}
 
 	userRoot := new(userRoot)
 	err = json.NewDecoder(resp.Body).Decode(userRoot)
 	if err != nil {
-		return "", err
+		return "", resp, err
 	}
 
-	return userRoot.User.APIToken, nil
+	return userRoot.User.APIToken, resp, nil
 }
 
 // CheckResponse checks the API response for errors, and returns them if present. A response is considered
