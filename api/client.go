@@ -29,8 +29,9 @@ type Client struct {
 
 	common service // Reuse a single struct instead of allocating one for each service on the heap.
 
-	Devices *DevicesService
-	SSHs    *SSHsService
+	Devices      *DevicesService
+	LoginService *LoginService
+	SSHs         *SSHsService
 }
 
 type service struct {
@@ -52,6 +53,7 @@ func NewClient(username, password string) *Client {
 	c.common.client = c
 
 	c.Devices = (*DevicesService)(&c.common)
+	c.LoginService = (*LoginService)(&c.common)
 	c.SSHs = (*SSHsService)(&c.common)
 
 	return c
