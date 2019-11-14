@@ -21,8 +21,12 @@ jobs:
           name: Run unit tests
           command: |
             make clean test
+            go tool cover -html=build/coverage.out -o build/artifacts/coverage.html
 
       - save_cache:
           key: go-mod-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+
+      - store_artifacts:
+          path: build/artifacts/coverage.html

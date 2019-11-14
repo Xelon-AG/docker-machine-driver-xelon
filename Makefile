@@ -25,7 +25,8 @@ fmt:
 .PHONY: test
 test:
 	@echo "==> Running tests..."
-	@go test -v -cover ./...
+	@mkdir -p $(BUILD_DIR)
+	@go test -v -cover -coverprofile=$(BUILD_DIR)/coverage.out ./...
 
 
 ## build: Build binary for default local system's operating system and architecture.
