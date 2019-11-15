@@ -1,6 +1,17 @@
 package xelon
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/docker/machine/libmachine/log"
+	"github.com/docker/machine/libmachine/ssh"
+
+	"bitbucket.org/xelonvdc/docker-machine-driver-xelon/api"
+
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/mcnflag"
 	"github.com/docker/machine/libmachine/state"
@@ -8,6 +19,18 @@ import (
 
 type Driver struct {
 	*drivers.BaseDriver
+	APIBaseURL     string
+	CPUCores       int
+	DevicePassword string
+	DiskSize       int
+	KubernetesID   string
+	LocalVMID      string
+	Memory         int
+	Password       string
+	SwapDiskSize   int
+	TemplateID     int
+	TenantID       string
+	Username       string
 }
 
 func NewDriver(hostName, storePath string) *Driver {
@@ -20,7 +43,36 @@ func NewDriver(hostName, storePath string) *Driver {
 }
 
 func (d *Driver) Create() error {
-	panic("implement me")
+	log.Info("Authenticating into Xelon VDC...")
+	client := d.getClient()
+	user, _, err := client.LoginService.Login()
+	if err != nil {
+		return err
+	}
+	d.TenantID = user.TenantIdentifier
+
+	log.Info("Creating Xelon device...")
+	deviceCreateResponse, err := d.createDevice()
+	if err != nil {
+		return err
+	}
+	d.LocalVMID = deviceCreateResponse.Device.LocalVMID
+
+	log.Info("Adding SSH key to the device...")
+	err = d.addSSHKey(d.LocalVMID)
+	if err != nil {
+		return err
+	}
+
+	log.Info("Starting Xelon device...")
+	err = d.startDevice()
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Created device LocalVMID %v, IP address %v", d.LocalVMID, d.IPAddress)
+
+	return nil
 }
 
 func (d *Driver) DriverName() string {
@@ -28,52 +80,253 @@ func (d *Driver) DriverName() string {
 }
 
 func (d *Driver) GetCreateFlags() []mcnflag.Flag {
-	panic("implement me")
+	return []mcnflag.Flag{
+		mcnflag.StringFlag{
+			EnvVar: "XELON_DEVICE_PASSWORD",
+			Name:   "xelon-device-password",
+			Usage:  "Xelon password for the device",
+		},
+		mcnflag.StringFlag{
+			EnvVar: "XELON_PASSWORD",
+			Name:   "xelon-password",
+			Usage:  "Xelon password",
+		},
+		mcnflag.StringFlag{
+			EnvVar: "XELON_USERNAME",
+			Name:   "xelon-username",
+			Usage:  "Xelon user mail",
+		},
+	}
 }
 
 func (d *Driver) GetSSHHostname() (string, error) {
 	return d.GetIP()
 }
 
-func (d *Driver) GetSSHKeyPath() string {
-	if d.SSHKeyPath == "" {
-		d.SSHKeyPath = d.ResolveStorePath("id_rsa")
-	}
-	return d.SSHKeyPath
-}
-
 func (d *Driver) GetURL() (string, error) {
-	panic("implement me")
+	if err := drivers.MustBeRunning(d); err != nil {
+		return "", err
+	}
+
+	ip, err := d.GetIP()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("tcp://%s", net.JoinHostPort(ip, "2376")), nil
 }
 
 func (d *Driver) GetState() (state.State, error) {
-	panic("implement me")
+	device, _, err := d.getClient().Devices.Get(d.TenantID, d.LocalVMID)
+	if err != nil {
+		return state.Error, err
+	}
+
+	if device == nil {
+		return state.None, nil
+	}
+
+	if device.Powerstate == true {
+		return state.Running, nil
+	} else {
+		return state.Stopped, nil
+	}
 }
 
 func (d *Driver) Kill() error {
-	panic("implement me")
+	_, err := d.getClient().Devices.Stop(d.LocalVMID)
+	return err
 }
 
 func (d *Driver) PreCreateCheck() error {
-	panic("implement me")
+	if d.DevicePassword != "" {
+		// TODO: add device password validation
+	}
+	return nil
 }
 
 func (d *Driver) Remove() error {
-	panic("implement me")
+	log.Info("Stopping Xelon device...")
+	err := d.stopDevice()
+	if err != nil {
+		return err
+	}
+
+	log.Info("Deleting Xelon device...")
+	client := d.getClient()
+	if resp, err := client.Devices.Delete(d.LocalVMID); err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			log.Info("Xelon device doesn't exist, assuming it is already deleted")
+		} else {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (d *Driver) Restart() error {
-	panic("implement me")
+	err := d.stopDevice()
+	if err != nil {
+		return err
+	}
+	return d.startDevice()
 }
 
 func (d *Driver) SetConfigFromFlags(opts drivers.DriverOptions) error {
-	panic("implement me")
+	d.APIBaseURL = opts.String("xelon-api-base-url")
+	d.DevicePassword = opts.String("xelon-device-password")
+	d.DiskSize = opts.Int("xelon-disk-size")
+	d.KubernetesID = opts.String("xelon-kubernetes-id")
+	d.Memory = opts.Int("xelon-memory")
+	d.Password = opts.String("xelon-password")
+	d.SwapDiskSize = opts.Int("xelon-swap-disk-size")
+	d.Username = opts.String("xelon-username")
+
+	if d.Username == "" {
+		return fmt.Errorf("xelon driver requires the --xelon-username option")
+	}
+	if d.Password == "" {
+		return fmt.Errorf("xelon driver requires the --xelon-password option")
+	}
+
+	return nil
 }
 
 func (d *Driver) Start() error {
-	panic("implement me")
+	return d.startDevice()
 }
 
 func (d *Driver) Stop() error {
-	panic("implement me")
+	return d.stopDevice()
+}
+
+func (d *Driver) getClient() *api.Client {
+	client := api.NewClient(d.Username, d.Password)
+	if d.APIBaseURL != "" {
+		client.SetBaseURL(d.APIBaseURL)
+	}
+	return client
+}
+
+func (d *Driver) createDevice() (*api.DeviceCreateResponse, error) {
+	deviceCreateConfiguration := &api.DeviceCreateConfiguration{
+		CPUCores:     d.CPUCores,
+		DiskSize:     d.DiskSize,
+		DisplayName:  d.MachineName,
+		Hostname:     d.MachineName,
+		KubernetesID: d.KubernetesID,
+		Memory:       d.Memory,
+		Password:     d.DevicePassword,
+		SwapDiskSize: d.SwapDiskSize,
+		TemplateID:   d.TemplateID,
+	}
+
+	log.Debug("Creating Xelon device...")
+
+	client := d.getClient()
+	deviceCreateResponse, _, err := client.Devices.Create(deviceCreateConfiguration)
+	if err != nil {
+		return deviceCreateResponse, err
+	}
+
+	return deviceCreateResponse, nil
+}
+
+func (d *Driver) addSSHKey(localVMID string) error {
+	d.SSHKeyPath = d.GetSSHKeyPath()
+
+	if err := ssh.GenerateSSHKey(d.SSHKeyPath); err != nil {
+		return err
+	}
+
+	publicKey, err := ioutil.ReadFile(d.SSHKeyPath + ".pub")
+	if err != nil {
+		return err
+	}
+
+	sshCreateConfiguration := &api.SSHCreateConfiguration{
+		Name:      d.MachineName,
+		PublicKey: string(publicKey),
+	}
+	_, err = d.getClient().SSHs.Add(localVMID, sshCreateConfiguration)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Driver) startDevice() error {
+	client := d.getClient()
+
+	log.Debug("Checking device state...")
+	device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+	if err != nil {
+		return err
+	}
+
+	if device.Powerstate == true {
+		log.Debug("Device is already running")
+		return nil
+	}
+
+	log.Debug("Starting Xelon device...")
+	_, err = client.Devices.Start(d.LocalVMID)
+	if err != nil {
+		return err
+	}
+
+	d.IPAddress = ""
+	log.Debug("Waiting for IP address to be assigned to the server...")
+	for {
+		device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+		if err != nil {
+			return nil
+		}
+		for _, network := range device.Networks {
+			d.IPAddress = network.IPAddress
+		}
+		if d.IPAddress != "" && device.Powerstate == true {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
+}
+
+func (d *Driver) stopDevice() error {
+	client := d.getClient()
+
+	log.Debug("Checking device state...")
+	device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+	if err != nil {
+		return err
+	}
+
+	if device.Powerstate == false {
+		log.Debug("Device is already stopped")
+		return nil
+	}
+
+	log.Debug("Stopping Xelon device...")
+	_, err = client.Devices.Stop(d.LocalVMID)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("Waiting until device is stopped...")
+	for {
+		device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+		if err != nil {
+			return nil
+		}
+		if device.Powerstate == false {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
 }
