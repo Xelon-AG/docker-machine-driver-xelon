@@ -23,6 +23,8 @@ const (
 	defaultDiskSize       = 20
 	defaultKubernetesID   = "kub1"
 	defaultMemory         = 2
+	defaultSSHPort        = 22
+	defaultSSHUser        = "xelon"
 	defaultSwapDiskSize   = 2
 	defaultTemplateID     = 7
 )
@@ -132,6 +134,18 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Xelon password",
 		},
 		mcnflag.IntFlag{
+			EnvVar: "XELON_SSH_PORT",
+			Name:   "xelon-ssh-port",
+			Usage:  "SSH port to connect",
+			Value:  defaultSSHPort,
+		},
+		mcnflag.StringFlag{
+			EnvVar: "XELON_SSH_USER",
+			Name:   "xelon-ssh-user",
+			Usage:  "SSH username to connect",
+			Value:  defaultSSHUser,
+		},
+		mcnflag.IntFlag{
 			EnvVar: "XELON_SWAP_DISK_SIZE",
 			Name:   "xelon-swap-disk-size",
 			Usage:  "Swap disk size for the device in GB",
@@ -233,6 +247,8 @@ func (d *Driver) SetConfigFromFlags(opts drivers.DriverOptions) error {
 	d.KubernetesID = opts.String("xelon-kubernetes-id")
 	d.Memory = opts.Int("xelon-memory")
 	d.Password = opts.String("xelon-password")
+	d.SSHPort = opts.Int("xelon-ssh-port")
+	d.SSHUser = opts.String("xelon-ssh-user")
 	d.SwapDiskSize = opts.Int("xelon-swap-disk-size")
 	d.TemplateID = opts.Int("xelon-template-id")
 	d.Username = opts.String("xelon-username")
