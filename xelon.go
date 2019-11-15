@@ -17,6 +17,16 @@ import (
 	"github.com/docker/machine/libmachine/state"
 )
 
+const (
+	defaultCPUCores       = 2
+	defaultDevicePassword = "Xelon22"
+	defaultDiskSize       = 20
+	defaultKubernetesID   = "kub1"
+	defaultMemory         = 2
+	defaultSwapDiskSize   = 2
+	defaultTemplateID     = 7
+)
+
 type Driver struct {
 	*drivers.BaseDriver
 	APIBaseURL     string
@@ -82,14 +92,56 @@ func (d *Driver) DriverName() string {
 func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
+			EnvVar: "XELON_API_BASE_URL",
+			Name:   "xelon-api-base-url",
+			Usage:  "Xelon API base URL",
+		},
+		mcnflag.IntFlag{
+			EnvVar: "XELON_CPU_CORES",
+			Name:   "xelon-cpu-cores",
+			Usage:  "Number of CPU cores for the device",
+			Value:  defaultCPUCores,
+		},
+		mcnflag.StringFlag{
 			EnvVar: "XELON_DEVICE_PASSWORD",
 			Name:   "xelon-device-password",
-			Usage:  "Xelon password for the device",
+			Usage:  "Password for the device",
+			Value:  defaultDevicePassword,
+		},
+		mcnflag.IntFlag{
+			EnvVar: "XELON_DISK_SIZE",
+			Name:   "xelon-disk-size",
+			Usage:  "Drive size for the device in GB",
+			Value:  defaultDiskSize,
+		},
+		mcnflag.StringFlag{
+			EnvVar: "XELON_KUBERNETES_ID",
+			Name:   "xelon-kubernetes-id",
+			Usage:  "Kubernetes ID for the device",
+			Value:  defaultKubernetesID,
+		},
+		mcnflag.IntFlag{
+			EnvVar: "XELON_MEMORY",
+			Name:   "xelon-memory",
+			Usage:  "Size of memory for the device in GB",
+			Value:  defaultMemory,
 		},
 		mcnflag.StringFlag{
 			EnvVar: "XELON_PASSWORD",
 			Name:   "xelon-password",
 			Usage:  "Xelon password",
+		},
+		mcnflag.IntFlag{
+			EnvVar: "XELON_SWAP_DISK_SIZE",
+			Name:   "xelon-swap-disk-size",
+			Usage:  "Swap disk size for the device in GB",
+			Value:  defaultSwapDiskSize,
+		},
+		mcnflag.IntFlag{
+			EnvVar: "XELON_TEMPLATE_ID",
+			Name:   "xelon-template-id",
+			Usage:  "ISO template ID for the device",
+			Value:  defaultTemplateID,
 		},
 		mcnflag.StringFlag{
 			EnvVar: "XELON_USERNAME",
@@ -175,12 +227,14 @@ func (d *Driver) Restart() error {
 
 func (d *Driver) SetConfigFromFlags(opts drivers.DriverOptions) error {
 	d.APIBaseURL = opts.String("xelon-api-base-url")
+	d.CPUCores = opts.Int("xelon-cpu-cores")
 	d.DevicePassword = opts.String("xelon-device-password")
 	d.DiskSize = opts.Int("xelon-disk-size")
 	d.KubernetesID = opts.String("xelon-kubernetes-id")
 	d.Memory = opts.Int("xelon-memory")
 	d.Password = opts.String("xelon-password")
 	d.SwapDiskSize = opts.Int("xelon-swap-disk-size")
+	d.TemplateID = opts.Int("xelon-template-id")
 	d.Username = opts.String("xelon-username")
 
 	if d.Username == "" {
