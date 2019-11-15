@@ -192,10 +192,14 @@ func (d *Driver) GetState() (state.State, error) {
 		return state.None, nil
 	}
 
-	if device.Powerstate == true {
-		return state.Running, nil
-	} else {
+	if device.Powerstate == false {
 		return state.Stopped, nil
+	} else {
+		if device.LocalVMDetails.State == 1 {
+			return state.Running, nil
+		} else {
+			return state.Starting, nil
+		}
 	}
 }
 
