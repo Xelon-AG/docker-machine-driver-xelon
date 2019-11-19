@@ -70,6 +70,18 @@ func (d *Driver) Create() error {
 	}
 	d.LocalVMID = deviceCreateResponse.Device.LocalVMID
 
+	log.Info("Waiting until Xelon device will be provisioned...")
+	for {
+		device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+		if err != nil {
+			return err
+		}
+		if device.Powerstate == true && device.LocalVMDetails.State == 1 {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
 	log.Info("Adding SSH key to the device...")
 	err = d.addSSHKey(d.LocalVMID)
 	if err != nil {
@@ -296,7 +308,7 @@ func (d *Driver) createDevice() (*api.DeviceCreateResponse, error) {
 		TemplateID:   d.TemplateID,
 	}
 
-	log.Debug("Creating Xelon device...")
+	log.Debugf("Creating Xelon device with configuration: %+v", deviceCreateConfiguration)
 
 	client := d.getClient()
 	deviceCreateResponse, _, err := client.Devices.Create(deviceCreateConfiguration)
@@ -340,7 +352,7 @@ func (d *Driver) startDevice() error {
 		return err
 	}
 
-	if device.Powerstate == true {
+	if device.Powerstate == true && device.LocalVMDetails.State == 1 {
 		log.Debug("Device is already running")
 		return nil
 	}
@@ -361,7 +373,7 @@ func (d *Driver) startDevice() error {
 		for _, network := range device.Networks {
 			d.IPAddress = network.IPAddress
 		}
-		if d.IPAddress != "" && device.Powerstate == true {
+		if d.IPAddress != "" && device.Powerstate == true && device.LocalVMDetails.State == 1 {
 			break
 		}
 		time.Sleep(1 * time.Second)
