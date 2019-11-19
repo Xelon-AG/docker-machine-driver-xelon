@@ -69,10 +69,11 @@ func (d *Driver) Create() error {
 		return err
 	}
 	d.LocalVMID = deviceCreateResponse.Device.LocalVMID
+	log.Debugf("Created Xelon device with localVMID %v", deviceCreateResponse.Device.LocalVMID)
 
 	log.Info("Waiting until Xelon device will be provisioned...")
 	for {
-		device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+		device, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
 		if err != nil {
 			return err
 		}
