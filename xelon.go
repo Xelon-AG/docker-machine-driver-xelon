@@ -71,6 +71,10 @@ func (d *Driver) Create() error {
 	d.LocalVMID = deviceCreateResponse.Device.LocalVMID
 	log.Debugf("Created Xelon device with localVMID %v", deviceCreateResponse.Device.LocalVMID)
 
+	// TODO: workaround until response (array -> element) issue will be fixed
+	log.Debug("Workaround (array -> element json parsing). Wait 60 seconds...")
+	time.Sleep(60 * time.Second)
+
 	log.Info("Waiting until Xelon device will be provisioned...")
 	for {
 		device, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
