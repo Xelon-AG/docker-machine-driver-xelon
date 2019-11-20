@@ -68,8 +68,10 @@ func (d *Driver) Create() error {
 	if err != nil {
 		return err
 	}
+	log.Debugf("DeviceCreateResponse: %+v", deviceCreateResponse)
+
 	d.LocalVMID = deviceCreateResponse.Device.LocalVMID
-	log.Debugf("Created Xelon device with localVMID %v", deviceCreateResponse.Device.LocalVMID)
+	d.IPAddress = deviceCreateResponse.IPs[0]
 
 	// TODO: workaround until response (array -> element) issue will be fixed
 	log.Debug("Workaround (array -> element json parsing). Wait 60 seconds...")
@@ -366,22 +368,6 @@ func (d *Driver) startDevice() error {
 	_, err = client.Devices.Start(d.LocalVMID)
 	if err != nil {
 		return err
-	}
-
-	d.IPAddress = ""
-	log.Debug("Waiting for IP address to be assigned to the server...")
-	for {
-		device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
-		if err != nil {
-			return nil
-		}
-		for _, network := range device.Networks {
-			d.IPAddress = network.IPAddress
-		}
-		if d.IPAddress != "" && device.Powerstate == true && device.LocalVMDetails.State == 1 {
-			break
-		}
-		time.Sleep(1 * time.Second)
 	}
 
 	return nil
