@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 const sshBasePath = "ssh"
@@ -36,7 +37,9 @@ func (s *SSHsService) Add(localVMID string, config *SSHCreateConfiguration) (*ht
 		return nil, ErrEmptyPayloadNotAllowed
 	}
 
-	path := fmt.Sprintf("%v/%v/%v/add?name=%v&ssh_key=%v", deviceBasePath, localVMID, sshBasePath, config.Name, config.PublicKey)
+	escapedName := url.PathEscape(config.Name)
+	escapedPublicKey := url.PathEscape(config.PublicKey)
+	path := fmt.Sprintf("%v/%v/%v/add?name=%v&ssh_key=%v", deviceBasePath, localVMID, sshBasePath, escapedName, escapedPublicKey)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, nil)
 	if err != nil {
