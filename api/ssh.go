@@ -37,7 +37,8 @@ func (s *SSHsService) Add(localVMID string, config *SSHCreateConfiguration) (*ht
 		return nil, ErrEmptyPayloadNotAllowed
 	}
 
-	normalizedPublicKey := strings.TrimSuffix(config.PublicKey, "\n")
+	trimmedPublicKey := strings.TrimSuffix(config.PublicKey, "\n")
+	normalizedPublicKey := strings.Replace(trimmedPublicKey, "+", "%2B", -1)
 	path := fmt.Sprintf("%v/%v/%v/add?name=%v&ssh_key=%v", deviceBasePath, localVMID, sshBasePath, config.Name, normalizedPublicKey)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, nil)

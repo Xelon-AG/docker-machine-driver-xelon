@@ -24,7 +24,7 @@ const (
 	defaultKubernetesID   = "kub1"
 	defaultMemory         = 2
 	defaultSSHPort        = 22
-	defaultSSHUser        = "xelon"
+	defaultSSHUser        = "root"
 	defaultSwapDiskSize   = 2
 	defaultTemplateID     = 7
 )
