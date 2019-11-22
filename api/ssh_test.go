@@ -16,7 +16,7 @@ func TestSSHsService_Add_emptyLocalVMID(t *testing.T) {
 	assert.Equal(t, ErrEmptyArgument.Error(), err.Error())
 }
 
-func TestSSHsService_Add_emptySSHCreateConfiguration(t *testing.T) {
+func TestSSHsService_Add_emptySSHAddRequest(t *testing.T) {
 	client, _, _, teardown := setup()
 	defer teardown()
 

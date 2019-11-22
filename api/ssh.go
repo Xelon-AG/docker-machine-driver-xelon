@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 const sshBasePath = "ssh"
@@ -23,25 +22,23 @@ type SSHKey struct {
 	VMID      int    `json:"vm_id,omitempty"`
 }
 
-type SSHCreateConfiguration struct {
-	Name      string
-	PublicKey string
+type SSHAddRequest struct {
+	Name   string `json:"name"`
+	SSHKey string `json:"ssh_key"`
 }
 
 // Add attaches new SSH to device with specific localvmid.
-func (s *SSHsService) Add(localVMID string, config *SSHCreateConfiguration) (*http.Response, error) {
+func (s *SSHsService) Add(localVMID string, sshAddRequest *SSHAddRequest) (*http.Response, error) {
 	if localVMID == "" {
 		return nil, ErrEmptyArgument
 	}
-	if config == nil {
+	if sshAddRequest == nil {
 		return nil, ErrEmptyPayloadNotAllowed
 	}
 
-	trimmedPublicKey := strings.TrimSuffix(config.PublicKey, "\n")
-	normalizedPublicKey := strings.Replace(trimmedPublicKey, "+", "%2B", -1)
-	path := fmt.Sprintf("%v/%v/%v/add?name=%v&ssh_key=%v", deviceBasePath, localVMID, sshBasePath, config.Name, normalizedPublicKey)
+	path := fmt.Sprintf("%v/%v/%v/add", deviceBasePath, localVMID, sshBasePath)
 
-	req, err := s.client.NewRequest(http.MethodPost, path, nil)
+	req, err := s.client.NewRequest(http.MethodPost, path, sshAddRequest)
 	if err != nil {
 		return nil, err
 	}

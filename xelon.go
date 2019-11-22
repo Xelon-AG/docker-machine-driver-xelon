@@ -61,6 +61,7 @@ func (d *Driver) Create() error {
 	if err != nil {
 		return err
 	}
+	log.Debugf("User tenant id: %v", user.TenantIdentifier)
 	d.TenantID = user.TenantIdentifier
 
 	log.Info("Creating Xelon device...")
@@ -338,9 +339,9 @@ func (d *Driver) addSSHKey(localVMID string) error {
 		return err
 	}
 
-	sshCreateConfiguration := &api.SSHCreateConfiguration{
-		Name:      d.MachineName,
-		PublicKey: string(publicKey),
+	sshCreateConfiguration := &api.SSHAddRequest{
+		Name:   d.MachineName,
+		SSHKey: string(publicKey),
 	}
 	_, err = d.getClient().SSHs.Add(localVMID, sshCreateConfiguration)
 	if err != nil {
