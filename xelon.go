@@ -74,10 +74,6 @@ func (d *Driver) Create() error {
 	d.LocalVMID = deviceCreateResponse.Device.LocalVMID
 	d.IPAddress = deviceCreateResponse.IPs[0]
 
-	// TODO: workaround until response (array -> element) issue will be fixed
-	log.Debug("Workaround (array -> element json parsing). Wait 60 seconds...")
-	time.Sleep(60 * time.Second)
-
 	log.Info("Waiting until Xelon device will be provisioned...")
 	for {
 		device, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
@@ -91,6 +87,7 @@ func (d *Driver) Create() error {
 	}
 
 	log.Info("Adding SSH key to the device...")
+	time.Sleep(10 * time.Second)
 	err = d.addSSHKey(d.LocalVMID)
 	if err != nil {
 		return err
