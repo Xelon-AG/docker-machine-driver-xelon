@@ -87,7 +87,8 @@ func (d *Driver) Create() error {
 	}
 
 	log.Info("Adding SSH key to the device...")
-	time.Sleep(10 * time.Second)
+	log.Debug("(workaround): waiting 60 seconds to be sure that server is ready...")
+	time.Sleep(60 * time.Second)
 	err = d.addSSHKey(d.LocalVMID)
 	if err != nil {
 		return err
