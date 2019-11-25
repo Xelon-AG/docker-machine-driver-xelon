@@ -20,6 +20,12 @@ type Device struct {
 	RAM            int            `json:"ram"`
 }
 
+type ToolsStatus struct {
+	RunningStatus string `json:"runningStatus,omitempty"`
+	Version       string `json:"version,omitempty"`
+	ToolsStatus   string `json:"toolsStatus"`
+}
+
 type Network struct {
 	IPAddress  string `json:"ip,omitempty"`
 	Label      string `json:"label,omitempty"`
@@ -57,12 +63,13 @@ type LocalVMDetails struct {
 	VMHostname    string   `json:"vmhostname"`
 }
 
-type deviceRoot struct {
-	Device Device `json:"device,omitempty"`
+type DeviceRoot struct {
+	ToolsStatus ToolsStatus `json:"toolsStatus,omitempty"`
+	Device      Device      `json:"device,omitempty"`
 }
 
 // Get provides detailed information for a device identified by tenant and localvmid.
-func (s *DevicesService) Get(tenantID, localVMID string) (*Device, *http.Response, error) {
+func (s *DevicesService) Get(tenantID, localVMID string) (*DeviceRoot, *http.Response, error) {
 	if tenantID == "" || localVMID == "" {
 		return nil, nil, ErrEmptyArgument
 	}
@@ -74,13 +81,13 @@ func (s *DevicesService) Get(tenantID, localVMID string) (*Device, *http.Respons
 		return nil, nil, err
 	}
 
-	deviceRoot := new(deviceRoot)
+	deviceRoot := new(DeviceRoot)
 	resp, err := s.client.Do(context.Background(), req, deviceRoot)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return &deviceRoot.Device, resp, nil
+	return deviceRoot, resp, nil
 }
 
 // Create makes a new device with given parameters.

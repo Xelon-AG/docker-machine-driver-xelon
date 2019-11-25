@@ -76,19 +76,23 @@ func (d *Driver) Create() error {
 
 	log.Info("Waiting until Xelon device will be provisioned...")
 	for {
-		device, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
+		deviceRoot, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
 		if err != nil {
 			return err
 		}
-		if device.Powerstate == true && device.LocalVMDetails.State == 1 {
+		device := deviceRoot.Device
+		toolsStatus := deviceRoot.ToolsStatus
+		log.Debugf("device.powerstate: %v, device.state: %v, tools.runningStatus: %v", device.Powerstate, device.LocalVMDetails.State, toolsStatus.RunningStatus)
+		if device.Powerstate == true && device.LocalVMDetails.State == 1 && toolsStatus.RunningStatus == "guestToolsRunning" {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 
+	log.Debug("(workaround): waiting 15 seconds to be sure that server is ready...")
+	time.Sleep(15 * time.Second)
+
 	log.Info("Adding SSH key to the device...")
-	log.Debug("(workaround): waiting 60 seconds to be sure that server is ready...")
-	time.Sleep(60 * time.Second)
 	err = d.addSSHKey(d.LocalVMID)
 	if err != nil {
 		return err
@@ -201,19 +205,21 @@ func (d *Driver) GetURL() (string, error) {
 }
 
 func (d *Driver) GetState() (state.State, error) {
-	device, _, err := d.getClient().Devices.Get(d.TenantID, d.LocalVMID)
+	deviceRoot, _, err := d.getClient().Devices.Get(d.TenantID, d.LocalVMID)
 	if err != nil {
 		return state.Error, err
 	}
 
-	if device == nil {
+	if deviceRoot == nil {
 		return state.None, nil
 	}
 
+	device := deviceRoot.Device
+	toolsStatus := deviceRoot.ToolsStatus
 	if device.Powerstate == false {
 		return state.Stopped, nil
 	} else {
-		if device.LocalVMDetails.State == 1 {
+		if device.LocalVMDetails.State == 1 && toolsStatus.RunningStatus == "guestToolsRunning" {
 			return state.Running, nil
 		} else {
 			return state.Starting, nil
@@ -353,10 +359,11 @@ func (d *Driver) startDevice() error {
 	client := d.getClient()
 
 	log.Debug("Checking device state...")
-	device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+	deviceRoot, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
 	if err != nil {
 		return err
 	}
+	device := deviceRoot.Device
 
 	if device.Powerstate == true && device.LocalVMDetails.State == 1 {
 		log.Debug("Device is already running")
@@ -376,10 +383,11 @@ func (d *Driver) stopDevice() error {
 	client := d.getClient()
 
 	log.Debug("Checking device state...")
-	device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+	deviceRoot, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
 	if err != nil {
 		return err
 	}
+	device := deviceRoot.Device
 
 	if device.Powerstate == false {
 		log.Debug("Device is already stopped")
@@ -394,11 +402,11 @@ func (d *Driver) stopDevice() error {
 
 	log.Debug("Waiting until device is stopped...")
 	for {
-		device, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
+		deviceRoot, _, err := client.Devices.Get(d.TenantID, d.LocalVMID)
 		if err != nil {
 			return nil
 		}
-		if device.Powerstate == false {
+		if deviceRoot.Device.Powerstate == false {
 			break
 		}
 		time.Sleep(1 * time.Second)
