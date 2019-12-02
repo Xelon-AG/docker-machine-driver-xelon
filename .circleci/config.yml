@@ -55,7 +55,7 @@ jobs:
           name: Publish release on GitHub
           command: |
             go get github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./build/
+            ghr --draft --token ${GITHUB_TOKEN} --username ${CIRCLE_PROJECT_USERNAME} --repository ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./build/
       - *save_go_modules_cache
 
 workflows:
