@@ -1,36 +1,75 @@
-version: 2
-jobs:
-  build:
-    docker:
-      - image: circleci/golang:1.13.4
+version: 2.1
 
-    working_directory: /go/src/{{REPO_NAME}}
+defaults: &defaults
+  docker:
+    - image: circleci/golang:1.13.4
+  working_directory: /go/src/docker-machine-driver-xelon
+
+references:
+  attach_workspace: &attach_workspace
+    attach_workspace:
+      at: /go/src/docker-machine-driver-xelon
+  persist_workspace: &persist_workspace
+    persist_to_workspace:
+      root: /go/src/docker-machine-driver-xelon
+      paths:
+        - "*"
+  save_go_modules_cache: &save_go_modules_cache
+    save_cache:
+      key: go-mod-{{ checksum "go.sum" }}
+      paths:
+        - "/go/pkg/mod"
+  restore_go_modules_cache: &restore_go_modules_cache
+    restore_cache:
+      keys:
+        - go-mod-{{ checksum "go.sum" }}
+
+
+jobs:
+  tests:
+    <<: *defaults
     steps:
       - checkout
-
-      - restore_cache:
-          keys:
-            - go-mod-{{ checksum "go.sum" }}
-
-      - run:
-          name: Initialize environment
-          command: |
-            mkdir -p /tmp/test-results
-
+      - *restore_go_modules_cache
       - run:
           name: Check code formatting with go fmt
           command: |
             make fmt
-
       - run:
-          name: Run unit tests
+          name: Run unit tests and calculate coverage
           command: |
-            gotestsum --format=short-verbose --no-summary=output --junitfile /tmp/test-results/gotestsum-report.xml
+            make clean test
+      - *save_go_modules_cache
+      - *persist_workspace
 
-      - save_cache:
-          key: go-mod-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
+  github-release:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - *restore_go_modules_cache
+      - run:
+          name: Build release binaries
+          command: |
+            make clean release
+      - run:
+          name: Publish release on GitHub
+          command: |
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./build/
 
-      - store_test_results:
-          path: /tmp/test-results
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - tests:
+          filters:
+            tags:
+              only: /.*/
+      - github-release:
+          requires:
+            - tests
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
