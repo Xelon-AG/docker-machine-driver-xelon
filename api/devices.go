@@ -41,7 +41,6 @@ type DeviceCreateConfiguration struct {
 	Memory       int
 	Password     string
 	SwapDiskSize int
-	TemplateID   int
 }
 
 type DeviceCreateResponse struct {
@@ -96,9 +95,9 @@ func (s *DevicesService) Create(config *DeviceCreateConfiguration) (*DeviceCreat
 		return nil, nil, ErrEmptyPayloadNotAllowed
 	}
 
-	path := fmt.Sprintf("%v/create?cpucores=%v&disksize=%v&displayname=%v&hostname=%v&kubernetes_id=%v&memory=%v&password=%v&swapdisksize=%v&template=%v",
+	path := fmt.Sprintf("%v/create?cpucores=%v&disksize=%v&displayname=%v&hostname=%v&kubernetes_id=%v&memory=%v&password=%v&swapdisksize=%v",
 		deviceBasePath, config.CPUCores, config.DiskSize, config.DisplayName, config.Hostname,
-		config.KubernetesID, config.Memory, config.Password, config.SwapDiskSize, config.TemplateID)
+		config.KubernetesID, config.Memory, config.Password, config.SwapDiskSize)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, nil)
 	if err != nil {

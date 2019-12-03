@@ -26,7 +26,6 @@ const (
 	defaultSSHPort        = 22
 	defaultSSHUser        = "root"
 	defaultSwapDiskSize   = 2
-	defaultTemplateID     = 7
 )
 
 type Driver struct {
@@ -40,7 +39,6 @@ type Driver struct {
 	Memory         int
 	Password       string
 	SwapDiskSize   int
-	TemplateID     int
 	TenantID       string
 	Username       string
 }
@@ -173,12 +171,6 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Swap disk size for the device in GB",
 			Value:  defaultSwapDiskSize,
 		},
-		mcnflag.IntFlag{
-			EnvVar: "XELON_TEMPLATE_ID",
-			Name:   "xelon-template-id",
-			Usage:  "ISO template ID for the device",
-			Value:  defaultTemplateID,
-		},
 		mcnflag.StringFlag{
 			EnvVar: "XELON_USERNAME",
 			Name:   "xelon-username",
@@ -278,7 +270,6 @@ func (d *Driver) SetConfigFromFlags(opts drivers.DriverOptions) error {
 	d.SSHPort = opts.Int("xelon-ssh-port")
 	d.SSHUser = opts.String("xelon-ssh-user")
 	d.SwapDiskSize = opts.Int("xelon-swap-disk-size")
-	d.TemplateID = opts.Int("xelon-template-id")
 	d.Username = opts.String("xelon-username")
 
 	if d.Username == "" {
@@ -317,7 +308,6 @@ func (d *Driver) createDevice() (*api.DeviceCreateResponse, error) {
 		Memory:       d.Memory,
 		Password:     d.DevicePassword,
 		SwapDiskSize: d.SwapDiskSize,
-		TemplateID:   d.TemplateID,
 	}
 
 	log.Debugf("Creating Xelon device with configuration: %+v", deviceCreateConfiguration)
