@@ -1,6 +1,6 @@
 # Docker Machine Xelon Driver
 
-[![Build Status](https://circleci.com/gh/pavel-github/docker-machine-driver-xelon.svg?style=shield)](https://circleci.com/gh/pavel-github/docker-machine-driver-xelon)
+[![Build Status](https://circleci.com/gh/Xelon-AG/docker-machine-driver-xelon.svg?style=shield)](https://circleci.com/gh/Xelon-AG/docker-machine-driver-xelon)
 
 Create Docker machines on [Xelon](https://www.xelon.ch/).
 
