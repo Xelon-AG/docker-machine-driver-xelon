@@ -1,4 +1,4 @@
-module bitbucket.org/xelonvdc/docker-machine-driver-xelon
+module github.com/Xelon-AG/docker-machine-driver-xelon
 
 go 1.13
 

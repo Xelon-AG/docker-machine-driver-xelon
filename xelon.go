@@ -7,13 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/docker/machine/libmachine/log"
-	"github.com/docker/machine/libmachine/ssh"
-
-	"bitbucket.org/xelonvdc/docker-machine-driver-xelon/api"
-
+	"github.com/Xelon-AG/docker-machine-driver-xelon/api"
 	"github.com/docker/machine/libmachine/drivers"
+	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/mcnflag"
+	"github.com/docker/machine/libmachine/ssh"
 	"github.com/docker/machine/libmachine/state"
 )
 
