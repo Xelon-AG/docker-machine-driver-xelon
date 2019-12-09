@@ -23,7 +23,7 @@ type Device struct {
 type ToolsStatus struct {
 	RunningStatus string `json:"runningStatus,omitempty"`
 	Version       string `json:"version,omitempty"`
-	ToolsStatus   string `json:"toolsStatus"`
+	ToolsStatus   bool   `json:"toolsStatus,omitempty"`
 }
 
 type Network struct {
