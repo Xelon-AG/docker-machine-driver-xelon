@@ -72,8 +72,8 @@ func (d *Driver) Create() error {
 	d.IPAddress = deviceCreateResponse.IPs[0]
 
 	log.Info("Waiting until Xelon device will be provisioned...")
-	log.Debug("(workaround): waiting 5 seconds for GET /device api call...")
-	time.Sleep(5 * time.Second)
+	log.Debug("(workaround): waiting 15 seconds for GET /device api call...")
+	time.Sleep(15 * time.Second)
 	for {
 		deviceRoot, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
 		if err != nil {
