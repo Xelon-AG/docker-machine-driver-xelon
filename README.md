@@ -54,6 +54,25 @@ If you encounter any troubles, activate the debug mode with `docker-machine --de
 | **`--xelon-username`**    | `XELON_USERNAME`        | -                                 |
 
 
+## Release process
+
+The release process uses continuous integration from CircelCI which means the code base should
+be ready to release any time.
+
+#### Checklist for releasing Xelon Driver
+
+The below steps are for final release:
+
+1. Check that latest build compiles and passes tests.
+2. Trigger release creation by tagging git commit with
+   ```bash
+   # X.Y.Z. is a release version, e.g. 1.2.0
+   $ git tag -a vX.Y.Z -m "Release vX.Y.Z."
+   ```
+3. Wait for the build to finish and release created.
+4. Update release information if needed
+
+
 ## Contributing
 
 We hope you'll get involved! Read our [Contributors' Guide](.github/CONTRIBUTING.md) for details.
