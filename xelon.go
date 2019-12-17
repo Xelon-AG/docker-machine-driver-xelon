@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Xelon-AG/docker-machine-driver-xelon/api"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/mcnflag"
 	"github.com/docker/machine/libmachine/ssh"
 	"github.com/docker/machine/libmachine/state"
+
+	"github.com/Xelon-AG/docker-machine-driver-xelon/api"
 )
 
 const (
@@ -225,8 +226,8 @@ func (d *Driver) Kill() error {
 }
 
 func (d *Driver) PreCreateCheck() error {
-	if d.DevicePassword != "" {
-		// TODO: add device password validation
+	if len(d.DevicePassword) < 6 {
+		return fmt.Errorf("xelon-device-password must be at least 6 characters long")
 	}
 	return nil
 }
