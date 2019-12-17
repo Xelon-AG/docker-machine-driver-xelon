@@ -72,11 +72,20 @@ func (d *Driver) Create() error {
 	d.IPAddress = deviceCreateResponse.IPs[0]
 
 	log.Info("Waiting until Xelon device will be provisioned...")
-	log.Debug("(workaround): waiting 15 seconds for GET /device api call...")
-	time.Sleep(15 * time.Second)
+	retryCount := 5
+	currentRetry := 1
 	for {
 		deviceRoot, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
 		if err != nil {
+			log.Debugf("Error by getting device information: retry %v of %v", currentRetry, retryCount)
+			if currentRetry <= retryCount {
+				currentRetry++
+				log.Debug("Waiting 5 seconds before next call...")
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			log.Info("Xelon device could not created, clean up resources...")
+			_ = d.Remove()
 			return err
 		}
 		device := deviceRoot.Device
