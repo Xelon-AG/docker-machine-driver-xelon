@@ -4,22 +4,20 @@
 
 Create Docker machines on [Xelon](https://www.xelon.ch/).
 
-You need to use your e-mail address as username and password and pass that to
-`docker-machine create` with `--xelon-username` and `--xelon-password` options.
+You need to use your token and pass that to `docker-machine create` with `--xelon-token` option.
 
 
 ## Usage
 
     $ docker-machine create --driver xelon \
-        --xelon-username <YOUR-EMAIL> \
-        --xelon-password <YOUR-PASSWORD> \
+        --xelon-token <YOUR-TOKEN> \
         MY_INSTANCE
 
 If you encounter any troubles, activate the debug mode with `docker-machine --debug create ...`.
 
 ### When explicitly passing environment variables
 
-    $ export XELON_USERNAME=<YOUR-EMAIL>; export XELON_PASSWORD=<YOUR-PASSWORD>
+    $ export XELON_TOKEN=<YOUR-TOKEN>
     $ docker-machine create --driver xelon MY_INSTANCE
 
 
@@ -31,11 +29,10 @@ If you encounter any troubles, activate the debug mode with `docker-machine --de
 - `--xelon-disk-size`: Drive size for the device in GB.
 - `--xelon-kubernetes-id`: Kubernetes ID for the device.
 - `--xelon-memory`: Size of memory for the device in GB.
-- `--xelon-password`: **required** Password for the device.
 - `--xelon-ssh-port`: SSH port to connect.
 - `--xelon-ssh-user`: SSH username to connect.
 - `--xelon-swap-disk-size`: Swap disk size for the device in GB.
-- `--xelon-username`: **required** Xelon user mail.
+- `--xelon-token`: **required** Xelon authentication token.
 
 #### Environment variables and default values
 
@@ -47,11 +44,10 @@ If you encounter any troubles, activate the debug mode with `docker-machine --de
 | `--xelon-disk-size`       | `XELON_DISK_SIZE`       | `20`                              |
 | `--xelon-kubernetes-id`   | `XELON_KUBERNETES_ID`   | `kub1`                            |
 | `--xelon-memory`          | `XELON_MEMORY`          | `2`                               |
-| **`--xelon-password`**    | `XELON_PASSWORD`        | -                                 |
 | `--xelon-ssh-port`        | `XELON_SSH_PORT`        | `22`                              |
 | `--xelon-ssh-user`        | `XELON_SSH_USER`        | `root`                            |
 | `--xelon-swap-disk-size`  | `XELON_SWAP_DISK_SIZE`  | `2`                               |
-| **`--xelon-username`**    | `XELON_USERNAME`        | -                                 |
+| **`--xelon-token`**       | `XELON_TOKEN`           | -                                 |
 
 
 ## Release process
