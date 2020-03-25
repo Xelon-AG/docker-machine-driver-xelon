@@ -36,10 +36,9 @@ type Driver struct {
 	KubernetesID   string
 	LocalVMID      string
 	Memory         int
-	Password       string
 	SwapDiskSize   int
 	TenantID       string
-	Username       string
+	Token          string
 }
 
 func NewDriver(hostName, storePath string) *Driver {
@@ -54,12 +53,12 @@ func NewDriver(hostName, storePath string) *Driver {
 func (d *Driver) Create() error {
 	log.Info("Authenticating into Xelon VDC...")
 	client := d.getClient()
-	user, _, err := client.LoginService.Login()
+	tenant, _, err := client.Tenant.Get()
 	if err != nil {
 		return err
 	}
-	log.Debugf("User tenant id: %v", user.TenantIdentifier)
-	d.TenantID = user.TenantIdentifier
+	log.Debugf("User tenant id: %v", tenant.TenantIdentifier)
+	d.TenantID = tenant.TenantIdentifier
 
 	log.Info("Creating Xelon device...")
 	deviceCreateResponse, err := d.createDevice()
@@ -75,7 +74,7 @@ func (d *Driver) Create() error {
 	retryCount := 5
 	currentRetry := 1
 	for {
-		deviceRoot, _, err := client.Devices.Get(user.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
+		deviceRoot, _, err := client.Devices.Get(tenant.TenantIdentifier, deviceCreateResponse.Device.LocalVMID)
 		if err != nil {
 			log.Debugf("Error by getting device information: retry %v of %v", currentRetry, retryCount)
 			if currentRetry <= retryCount {
@@ -158,11 +157,6 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Size of memory for the device in GB",
 			Value:  defaultMemory,
 		},
-		mcnflag.StringFlag{
-			EnvVar: "XELON_PASSWORD",
-			Name:   "xelon-password",
-			Usage:  "Xelon password",
-		},
 		mcnflag.IntFlag{
 			EnvVar: "XELON_SSH_PORT",
 			Name:   "xelon-ssh-port",
@@ -182,9 +176,9 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Value:  defaultSwapDiskSize,
 		},
 		mcnflag.StringFlag{
-			EnvVar: "XELON_USERNAME",
-			Name:   "xelon-username",
-			Usage:  "Xelon user mail",
+			EnvVar: "XELON_TOKEN",
+			Name:   "xelon-token",
+			Usage:  "Xelon authentication token",
 		},
 	}
 }
@@ -276,17 +270,13 @@ func (d *Driver) SetConfigFromFlags(opts drivers.DriverOptions) error {
 	d.DiskSize = opts.Int("xelon-disk-size")
 	d.KubernetesID = opts.String("xelon-kubernetes-id")
 	d.Memory = opts.Int("xelon-memory")
-	d.Password = opts.String("xelon-password")
 	d.SSHPort = opts.Int("xelon-ssh-port")
 	d.SSHUser = opts.String("xelon-ssh-user")
 	d.SwapDiskSize = opts.Int("xelon-swap-disk-size")
-	d.Username = opts.String("xelon-username")
+	d.Token = opts.String("xelon-token")
 
-	if d.Username == "" {
-		return fmt.Errorf("xelon driver requires the --xelon-username option")
-	}
-	if d.Password == "" {
-		return fmt.Errorf("xelon driver requires the --xelon-password option")
+	if d.Token == "" {
+		return fmt.Errorf("xelon driver requires the --xelon-token option")
 	}
 
 	return nil
@@ -301,7 +291,7 @@ func (d *Driver) Stop() error {
 }
 
 func (d *Driver) getClient() *api.Client {
-	client := api.NewClient(d.Username, d.Password)
+	client := api.NewClient(d.Token)
 	if d.APIBaseURL != "" {
 		client.SetBaseURL(d.APIBaseURL)
 	}

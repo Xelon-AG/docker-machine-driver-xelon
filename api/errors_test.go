@@ -13,7 +13,7 @@ func TestErrors_Error_messageFormat(t *testing.T) {
 		Response: &http.Response{
 			Request: &http.Request{
 				Method: http.MethodPost,
-				URL:    &url.URL{Scheme: "https", Path: "vdc.xelon.ch/api/user/login"},
+				URL:    &url.URL{Scheme: "https", Path: "vdc.xelon.ch/api/service"},
 			},
 			StatusCode: 401,
 		},
@@ -22,7 +22,7 @@ func TestErrors_Error_messageFormat(t *testing.T) {
 			Code:  401,
 		},
 	}
-	expectedMessage := "POST https://vdc.xelon.ch/api/user/login: 401 {Error:Unauthenticated user Code:401}"
+	expectedMessage := "POST https://vdc.xelon.ch/api/service: 401 {Error:Unauthenticated user Code:401}"
 
 	assert.Error(t, errorResponse)
 	assert.Equal(t, expectedMessage, errorResponse.Error())

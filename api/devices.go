@@ -119,7 +119,7 @@ func (s *DevicesService) Delete(localVMID string) (*http.Response, error) {
 		return nil, ErrEmptyArgument
 	}
 
-	path := fmt.Sprintf("%v/%v?password=%v", deviceBasePath, localVMID, s.client.Password)
+	path := fmt.Sprintf("%v/%v", deviceBasePath, localVMID)
 
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {

@@ -16,7 +16,7 @@ func setup() (client *Client, mux *http.ServeMux, serverURL string, teardown fun
 	mux = http.NewServeMux()
 
 	apiHandler := http.NewServeMux()
-	apiHandler.Handle("/api/user/", http.StripPrefix("/api/user", mux))
+	apiHandler.Handle("/api/service/", http.StripPrefix("/api/service", mux))
 	apiHandler.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		_, _ = fmt.Fprintln(os.Stderr, "FAIL: Client.BaseURL path prefix is not preserved in the request URL:")
 		_, _ = fmt.Fprintln(os.Stderr)
@@ -26,16 +26,16 @@ func setup() (client *Client, mux *http.ServeMux, serverURL string, teardown fun
 		http.Error(w, "client.BaseURL path prefix is not preserved in the request URL.", http.StatusInternalServerError)
 	})
 	server := httptest.NewServer(apiHandler)
-	client = NewClient("user", "password")
-	client.BaseURL, _ = url.Parse(server.URL + "/api/user/")
+	client = NewClient("token")
+	client.BaseURL, _ = url.Parse(server.URL + "/api/service/")
 
 	return client, mux, server.URL, server.Close
 }
 
 func TestClient_NewClient(t *testing.T) {
-	client := NewClient("user", "password")
+	client := NewClient("token")
 
-	assert.Equal(t, "https://vdc.xelon.ch/api/user/", client.BaseURL.String())
+	assert.Equal(t, "https://vdc.xelon.ch/api/service/", client.BaseURL.String())
 	assert.Equal(t, "docker-machine-driver-xelon", client.UserAgent)
 }
 
