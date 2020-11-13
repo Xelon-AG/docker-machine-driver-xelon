@@ -3,6 +3,7 @@ package xelon
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -60,8 +61,8 @@ func (d *Driver) Create() error {
 	log.Debugf("User tenant id: %v", tenant.TenantIdentifier)
 	d.TenantID = tenant.TenantIdentifier
 
-	log.Debug("(workaround): waiting 5 seconds before creating Xelon device...")
-	time.Sleep(5 * time.Second)
+	log.Debug("(workaround): generate random delay before creating Xelon device...")
+	randomDelay()
 
 	log.Info("Creating Xelon device...")
 	deviceCreateResponse, err := d.createDevice()
@@ -406,4 +407,11 @@ func (d *Driver) stopDevice() error {
 	}
 
 	return nil
+}
+
+func randomDelay() {
+	rand.Seed(time.Now().UnixNano())
+	n := rand.Intn(10)
+	log.Debugf("random delay is %d", n)
+	time.Sleep(time.Duration(n) * time.Second)
 }
