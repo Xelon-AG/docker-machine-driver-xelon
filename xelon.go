@@ -60,6 +60,9 @@ func (d *Driver) Create() error {
 	log.Debugf("User tenant id: %v", tenant.TenantIdentifier)
 	d.TenantID = tenant.TenantIdentifier
 
+	log.Debug("(workaround): waiting 5 seconds before creating Xelon device...")
+	time.Sleep(5 * time.Second)
+
 	log.Info("Creating Xelon device...")
 	deviceCreateResponse, err := d.createDevice()
 	if err != nil {
